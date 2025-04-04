@@ -3,11 +3,13 @@ import time
 import math
 from machine import PWM, LED
 
-# Speed Constants for ease of use. will probably remove these later and replace with a mathematical system to get exact values.
-CRAWL = 1525000
-SLOW = 1550000
-MED = 1600000
-FAST = 1650000 # maximum speed
+# Control constants for ease of use. will probably remove these later and replace with a mathematical system to get exact values.
+SPEED = 1570000
+LEFT = 1250000
+MIDDLE = 1500000
+RIGHT = 1750000
+ANGLE = 20
+OFFCENTER_ANGLE = ANGLE+5
 
 # LED Definitions
 redled = LED("LED_RED") # RIGHT
@@ -47,6 +49,7 @@ sensor.set_auto_whitebal(False)  # must be turned off for color tracking
 clock = time.clock()  # Tracks FPS.
 
 # Enable blue LED to show that the system is on
+led_off()
 blueled.on()
 # STARTUP: In neutral for at least 5 seconds
 p7.duty_ns(1500000)
@@ -100,44 +103,43 @@ while True:
         # deadass idk what this does lol
         # if the front x value is greater than 100 then make a slight right turn?
         # gonna comment it out for now.
-        
-        # front = x_vals[0]
-        # if front>100:
-        #     angle = 20
-        # elif front<60:
-        #     angle = -20
-        # else: angle = 0
+        front = x_vals[0]
+        if front>100:
+            angle = (-1*OFFCENTER_ANGLE)
+        elif front<60:
+            angle = OFFCENTER_ANGLE
+        else: angle = 0
 
 
         '''
         MAKE ADJUSTMENTS
         '''
-        if angle<-15: # left
-            p7.duty_ns(1100000)
-            p9.duty_ns(SLOW)
+        if angle<(-1*ANGLE): # left
+            p7.duty_ns(LEFT)
+            p9.duty_ns(SPEED)
             led_off()
             blueled.on()
-            print(f"angle is {angle}, turning left, servo: 1100, motor: slow")
+            # print(f"angle is {angle}, turning left, servo: 1100, motor: crawl")
             # print(f"servo: 1100, motor: 1575\n")
 
-        elif angle>15: # right
-            p7.duty_ns(1900000)
-            p9.duty_ns(SLOW)
+        elif angle>ANGLE: # right
+            p7.duty_ns(RIGHT)
+            p9.duty_ns(SPEED)
             led_off()
             redled.on()
-            print(f"angle is {angle}, turning right, servo: 1900, motor: slow")
+            # print(f"angle is {angle}, turning right, servo: 1900, motor: crawl")
             # print(f"servo: 1900, motor: 1575\n")
 
         else: #straight
-            p7.duty_ns(1500000)
-            p9.duty_ns(MED)
+            p7.duty_ns(MIDDLE)
+            p9.duty_ns(SPEED)
             led_off()
             greenled.on()
-            print(f"angle is {angle}, no turn, servo: 1500, motor: medium")
+            # print(f"angle is {angle}, no turn, servo: 1500, motor: slow")
             # print(f"servo: 1500, motor: 1650\n")
 
     else:
-        print("track not detected, braking")
+        # print("track not detected, braking")
         p7.duty_ns(1500000) # straighten wheels
         p9.duty_ns(1500000) # brake
         led_off()
