@@ -45,7 +45,7 @@ ledblue.on()
 # STARTUP: In neutral for at least 5 seconds
 p7.duty_ns(1500000)
 p9.duty_ns(1500000)
-# time.sleep_ms(5000)
+time.sleep_ms(5000)
 
 ledblue.off()
 
