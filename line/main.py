@@ -4,12 +4,14 @@ import math
 from machine import PWM, LED
 
 # Control constants for ease of use. will probably remove these later and replace with a mathematical system to get exact values.
-SPEED = 1570000
-LEFT = 1250000
-MIDDLE = 1500000
-RIGHT = 1750000
-ANGLE = 20
+SPEED = 1600000
+ANGLE = 15
+MAX_SIGMA = 375000
 OFFCENTER_ANGLE = ANGLE+5
+OFFROAD_ANGLE = ANGLE+10
+OFFROAD_SPEED = 1565000
+
+last_seen = False # false = left, true = right
 
 # LED Definitions
 redled = LED("LED_RED") # RIGHT
@@ -19,6 +21,25 @@ def led_off():
     redled.off()
     blueled.off()
     greenled.off()
+
+def convert_angle(theta):
+
+    # make compatible with PWM
+    sigma = int(theta * 10000)
+    if sigma > -50000 and sigma < 50000:
+        sigma = 0
+    elif sigma < 0:
+        sigma += 50000
+    elif sigma > 0:
+        sigma -= 50000
+
+    # floor and ceiling
+    if sigma > MAX_SIGMA:
+        sigma = MAX_SIGMA
+    elif sigma < -1*MAX_SIGMA:
+        sigma = -1*MAX_SIGMA
+
+    return int(sigma+1500000)
 
 #SERVO
 p7 = PWM("P7", freq=100, duty_u16=32768)
@@ -35,8 +56,8 @@ p9 = PWM("P9", freq=100, duty_u16=32768)
 # Camera Constants
 GRAYSCALE_THRESHOLD = [(200, 255)]
 ROIS = [  # [ROI, weight]
-    (0, 20, 160, 10, 0.7),  # ROI1, top
-    (0, 80, 160, 10, 0.7)  # ROI2, bottom
+    (0, 20, 160, 10, 0.7),  # ROI0, top/front
+    (0, 80, 160, 10, 0.7)  # ROI1, bottom/back
 ]
 
 # Camera Setup
@@ -92,7 +113,7 @@ while True:
 
     if flags[0]==True and flags[1]==True:
         angle = -math.atan((x_vals[0]-x_vals[1])/(y_vals[0]-y_vals[1]))
-        angle = math.degrees(angle)
+        angle = math.degrees(angle) * (-1) #convert to degrees and flip because servo seems to be the other way around
         if angle>45: #ensure that the angle is within the -45 to 45 range
             angle = 45.00000
         elif angle<-45:
@@ -103,43 +124,46 @@ while True:
         # deadass idk what this does lol
         # if the front x value is greater than 100 then make a slight right turn?
         # gonna comment it out for now.
+        back = x_vals[1]
         front = x_vals[0]
-        if front>100:
+        if back>100 and front>100: # if back > 120, turn left
             angle = (-1*OFFCENTER_ANGLE)
-        elif front<60:
+            last_seen = False
+        elif back<60 and front < 60: # if back < 40, turn right
             angle = OFFCENTER_ANGLE
-        else: angle = 0
+            last_seen = True
+        # else: angle = 0
 
 
         '''
         MAKE ADJUSTMENTS
         '''
+        # enable led based on angle and get sigma
         if angle<(-1*ANGLE): # left
-            p7.duty_ns(LEFT)
-            p9.duty_ns(SPEED)
             led_off()
             blueled.on()
-            # print(f"angle is {angle}, turning left, servo: 1100, motor: crawl")
-            # print(f"servo: 1100, motor: 1575\n")
-
+            last_seen = False
         elif angle>ANGLE: # right
-            p7.duty_ns(RIGHT)
-            p9.duty_ns(SPEED)
             led_off()
             redled.on()
-            # print(f"angle is {angle}, turning right, servo: 1900, motor: crawl")
-            # print(f"servo: 1900, motor: 1575\n")
-
+            last_seen = True
         else: #straight
-            p7.duty_ns(MIDDLE)
-            p9.duty_ns(SPEED)
             led_off()
             greenled.on()
-            # print(f"angle is {angle}, no turn, servo: 1500, motor: slow")
-            # print(f"servo: 1500, motor: 1650\n")
+
+        turn_angle = convert_angle(angle)
+        # print(f"angle is {angle}, sigma is {turn_angle}")
+        p7.duty_ns(turn_angle)
+        p9.duty_ns(SPEED)
 
     else:
         # print("track not detected, braking")
-        p7.duty_ns(1500000) # straighten wheels
-        p9.duty_ns(1500000) # brake
+        if last_seen: # if right
+            turn_angle = convert_angle(OFFROAD_ANGLE)
+            p7.duty_ns(turn_angle) # turn right
+        else:
+            turn_angle = convert_angle(-1*OFFROAD_ANGLE)
+            p7.duty_ns(turn_angle) # turn left
+
+        p9.duty_ns(OFFROAD_SPEED) # slow down a lot
         led_off()
