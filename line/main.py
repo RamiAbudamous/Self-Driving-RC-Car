@@ -3,15 +3,28 @@ import time
 import math
 from machine import PWM, LED
 
-# Control constants for ease of use. will probably remove these later and replace with a mathematical system to get exact values.
-SPEED = 1600000
-ANGLE = 15
-MAX_SIGMA = 375000
-OFFCENTER_ANGLE = ANGLE+5
-OFFROAD_ANGLE = ANGLE+10
-OFFROAD_SPEED = 1565000
+# Control constants for ease of use
+# STRAIGHT_SPEED = 1575000
+# TURN_SPEED     = 1570000
+# OFFROAD_SPEED  = 1562500
 
-last_seen = False # false = left, true = right
+# uncomment these and comment the others to force the car to stay still (for steer testing)
+STRAIGHT_SPEED = 1500000
+TURN_SPEED     = 1500000
+OFFROAD_SPEED  = 1500000
+
+TURN_STRENGTH = 12250 # default 10k, feels pretty weak
+ANGLE = 15
+MAX_SIGMA = 400000
+DEADZONE  = 50000
+OFFROAD_ANGLE   = ANGLE+10
+
+OFFCENTER_ZONE = 50
+OFFCENTER_ANGLE = ANGLE+5
+
+LEFT = True
+RIGHT = False
+last_seen = LEFT
 
 # LED Definitions
 redled = LED("LED_RED") # RIGHT
@@ -25,13 +38,15 @@ def led_off():
 def convert_angle(theta):
 
     # make compatible with PWM
-    sigma = int(theta * 10000)
-    if sigma > -50000 and sigma < 50000:
+    sigma = int(theta * TURN_STRENGTH)
+    if sigma > -1*DEADZONE and sigma < DEADZONE:
         sigma = 0
-    elif sigma < 0:
-        sigma += 50000
-    elif sigma > 0:
-        sigma -= 50000
+
+    # why do we subtract the deadzone amount when we already have a floor/ceiling? commented out.
+    # elif sigma < 0:
+    #     sigma += DEADZONE
+    # elif sigma > 0:
+    #     sigma -= DEADZONE
 
     # floor and ceiling
     if sigma > MAX_SIGMA:
@@ -56,8 +71,8 @@ p9 = PWM("P9", freq=100, duty_u16=32768)
 # Camera Constants
 GRAYSCALE_THRESHOLD = [(200, 255)]
 ROIS = [  # [ROI, weight]
-    (0, 20, 160, 10, 0.7),  # ROI0, top/front
-    (0, 80, 160, 10, 0.7)  # ROI1, bottom/back
+    (0, 0, 160, 10, 0.7),  # ROI0, top/front
+    (0, 100, 160, 10, 0.7)  # ROI1, bottom/back
 ]
 
 # Camera Setup
@@ -124,15 +139,16 @@ while True:
         # deadass idk what this does lol
         # if the front x value is greater than 100 then make a slight right turn?
         # gonna comment it out for now.
+
         back = x_vals[1]
         front = x_vals[0]
-        if back>100 and front>100: # if back > 120, turn left
+        if back>(160-OFFCENTER_ZONE) and front>(160-OFFCENTER_ZONE): # right of lane so turn left
             angle = (-1*OFFCENTER_ANGLE)
-            last_seen = False
-        elif back<60 and front < 60: # if back < 40, turn right
+            last_seen = LEFT
+        elif back<OFFCENTER_ZONE and front<OFFCENTER_ZONE: # left of lane so turn right
             angle = OFFCENTER_ANGLE
-            last_seen = True
-        # else: angle = 0
+            last_seen = RIGHT
+        # # else: angle = 0
 
 
         '''
@@ -142,28 +158,31 @@ while True:
         if angle<(-1*ANGLE): # left
             led_off()
             blueled.on()
-            last_seen = False
+            last_seen = LEFT
+            p9.duty_ns(TURN_SPEED)
         elif angle>ANGLE: # right
             led_off()
             redled.on()
-            last_seen = True
+            last_seen = RIGHT
+            p9.duty_ns(TURN_SPEED)
         else: #straight
             led_off()
             greenled.on()
+            p9.duty_ns(STRAIGHT_SPEED)
 
         turn_angle = convert_angle(angle)
-        # print(f"angle is {angle}, sigma is {turn_angle}")
+        print(f"angle is {angle}, sigma is {turn_angle}")
         p7.duty_ns(turn_angle)
-        p9.duty_ns(SPEED)
 
     else:
         # print("track not detected, braking")
-        if last_seen: # if right
+        led_off()
+        p9.duty_ns(OFFROAD_SPEED) # slow down a lot
+        if last_seen==RIGHT:
             turn_angle = convert_angle(OFFROAD_ANGLE)
             p7.duty_ns(turn_angle) # turn right
-        else:
+            print(f"offroad right, angle is {OFFROAD_ANGLE}, sigma is {turn_angle}")
+        else: # if LEFT
             turn_angle = convert_angle(-1*OFFROAD_ANGLE)
             p7.duty_ns(turn_angle) # turn left
-
-        p9.duty_ns(OFFROAD_SPEED) # slow down a lot
-        led_off()
+            print(f"offroad left, angle is {OFFROAD_ANGLE}, sigma is {turn_angle}")
