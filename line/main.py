@@ -4,16 +4,16 @@ import math
 from machine import PWM, LED
 
 # Control constants for ease of use
-# STRAIGHT_SPEED = 1575000
-# TURN_SPEED     = 1570000
-# OFFROAD_SPEED  = 1562500
+STRAIGHT_SPEED = 1575000
+TURN_SPEED     = 1570000
+OFFROAD_SPEED  = 1562500
 
 # uncomment these and comment the others to force the car to stay still (for steer testing)
-STRAIGHT_SPEED = 1500000
-TURN_SPEED     = 1500000
-OFFROAD_SPEED  = 1500000
+# STRAIGHT_SPEED = 1500000
+# TURN_SPEED     = 1500000
+# OFFROAD_SPEED  = 1500000
 
-TURN_STRENGTH = 12250 # default 10k, feels pretty weak
+TURN_STRENGTH = 12000 # default 10k, feels pretty weak
 ANGLE = 15
 MAX_SIGMA = 400000
 DEADZONE  = 50000
