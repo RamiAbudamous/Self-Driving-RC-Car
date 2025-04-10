@@ -71,8 +71,8 @@ p9 = PWM("P9", freq=100, duty_u16=32768)
 # Camera Constants
 GRAYSCALE_THRESHOLD = [(200, 255)]
 ROIS = [  # [ROI, weight]
-    (0, 0, 160, 10, 0.7),  # ROI0, top/front
-    (0, 100, 160, 10, 0.7)  # ROI1, bottom/back
+    (0, 20, 160, 10, 0.7),  # ROI0, top/front
+    (0, 110, 160, 10, 0.7)  # ROI1, bottom/back
 ]
 
 # Camera Setup
