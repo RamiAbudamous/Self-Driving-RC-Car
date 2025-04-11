@@ -4,23 +4,23 @@ import math
 from machine import PWM, LED
 
 # Control constants for ease of use
-STRAIGHT_SPEED = 1575000
-TURN_SPEED     = 1570000
-OFFROAD_SPEED  = 1562500
+# speed ranges from 1,650,000 to 1,562,500. range of 87500
+# could decrease by 1000 per degree
+MAX_SPEED    = 1575000
+SPEED_SCALAR = 750
+MIN_SPEED    = 1562500 # also offroad speed for now
 
-# uncomment these and comment the others to force the car to stay still (for steer testing)
-# STRAIGHT_SPEED = 1500000
-# TURN_SPEED     = 1500000
-# OFFROAD_SPEED  = 1500000
+# Kill Switch: 1 = kill, 0 = no kill
+KILL = 1
 
-TURN_STRENGTH = 12000 # default 10k, feels pretty weak
-ANGLE = 15
+TURN_STRENGTH = 13000 # default 10k feels pretty weak
 MAX_SIGMA = 400000
 DEADZONE  = 50000
+ANGLE = 15
+ANGLE_OFFSET = 2.8
 OFFROAD_ANGLE   = ANGLE+10
-
-OFFCENTER_ZONE = 50
 OFFCENTER_ANGLE = ANGLE+5
+OFFCENTER_ZONE = 40
 
 LEFT = True
 RIGHT = False
@@ -69,9 +69,9 @@ p9 = PWM("P9", freq=100, duty_u16=32768)
 # 1.65 = Full speed forward
 
 # Camera Constants
-GRAYSCALE_THRESHOLD = [(200, 255)]
+GRAYSCALE_THRESHOLD = [(200, 255)] # 200, 255 initially
 ROIS = [  # [ROI, weight]
-    (0, 20, 160, 10, 0.7),  # ROI0, top/front
+    (0, 50, 160, 10, 0.7),  # ROI0, top/front
     (0, 110, 160, 10, 0.7)  # ROI1, bottom/back
 ]
 
@@ -129,6 +129,9 @@ while True:
     if flags[0]==True and flags[1]==True:
         angle = -math.atan((x_vals[0]-x_vals[1])/(y_vals[0]-y_vals[1]))
         angle = math.degrees(angle) * (-1) #convert to degrees and flip because servo seems to be the other way around
+
+        angle += ANGLE_OFFSET
+
         if angle>45: #ensure that the angle is within the -45 to 45 range
             angle = 45.00000
         elif angle<-45:
@@ -159,25 +162,29 @@ while True:
             led_off()
             blueled.on()
             last_seen = LEFT
-            p9.duty_ns(TURN_SPEED)
         elif angle>ANGLE: # right
             led_off()
             redled.on()
             last_seen = RIGHT
-            p9.duty_ns(TURN_SPEED)
         else: #straight
             led_off()
             greenled.on()
-            p9.duty_ns(STRAIGHT_SPEED)
 
         turn_angle = convert_angle(angle)
-        print(f"angle is {angle}, sigma is {turn_angle}")
+        speed = MAX_SPEED - int((abs(angle)*SPEED_SCALAR))
+        if speed < MIN_SPEED:
+            speed = MIN_SPEED
+        if KILL==1:
+            p9.duty_ns(1500000)
+        else:
+            p9.duty_ns(speed)
+        print(f"angle is {angle}, sigma is {turn_angle}, speed is {speed}")
         p7.duty_ns(turn_angle)
 
     else:
         # print("track not detected, braking")
         led_off()
-        p9.duty_ns(OFFROAD_SPEED) # slow down a lot
+        p9.duty_ns(MIN_SPEED) # slow down a lot
         if last_seen==RIGHT:
             turn_angle = convert_angle(OFFROAD_ANGLE)
             p7.duty_ns(turn_angle) # turn right
