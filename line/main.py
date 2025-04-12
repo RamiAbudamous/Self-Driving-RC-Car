@@ -3,24 +3,25 @@ import time
 import math
 from machine import PWM, LED
 
+# Kill Switch: 1 = kill, 0 = no kill
+KILL = 0
+
 # Control constants for ease of use
 # speed ranges from 1,650,000 to 1,562,500. range of 87500
-# could decrease by 1000 per degree
-MAX_SPEED    = 1575000
-SPEED_SCALAR = 750
+MAX_SPEED    = 1592500 #5975
+SPEED_SCALAR = 800     #900
 MIN_SPEED    = 1562500 # also offroad speed for now
 
-# Kill Switch: 1 = kill, 0 = no kill
-KILL = 1
-
-TURN_STRENGTH = 13000 # default 10k feels pretty weak
+TURN_STRENGTH = 11750 # default 10k feels pretty weak
 MAX_SIGMA = 400000
 DEADZONE  = 50000
-ANGLE = 15
-ANGLE_OFFSET = 2.8
-OFFROAD_ANGLE   = ANGLE+10
-OFFCENTER_ANGLE = ANGLE+5
+DEADZONE_ANGLE = 0
+ANGLE = 5
+ANGLE_OFFSET = 0
+OFFROAD_ANGLE   = ANGLE+20
+OFFCENTER_ANGLE = ANGLE+10
 OFFCENTER_ZONE = 40
+GREY_THRESH = 180
 
 LEFT = True
 RIGHT = False
@@ -69,9 +70,9 @@ p9 = PWM("P9", freq=100, duty_u16=32768)
 # 1.65 = Full speed forward
 
 # Camera Constants
-GRAYSCALE_THRESHOLD = [(200, 255)] # 200, 255 initially
+GRAYSCALE_THRESHOLD = [(GREY_THRESH, 255)] # 200, 255 initially
 ROIS = [  # [ROI, weight]
-    (0, 50, 160, 10, 0.7),  # ROI0, top/front
+    (0, 40, 160, 10, 0.7),  # ROI0, top/front
     (0, 110, 160, 10, 0.7)  # ROI1, bottom/back
 ]
 
@@ -171,20 +172,26 @@ while True:
             greenled.on()
 
         turn_angle = convert_angle(angle)
-        speed = MAX_SPEED - int((abs(angle)*SPEED_SCALAR))
-        if speed < MIN_SPEED:
-            speed = MIN_SPEED
+
+        # brake if kill
         if KILL==1:
-            p9.duty_ns(1500000)
-        else:
-            p9.duty_ns(speed)
-        print(f"angle is {angle}, sigma is {turn_angle}, speed is {speed}")
+            speed = 1500000
+        # lower speed if angle is outside the deadzone
+        elif abs(angle)>DEADZONE_ANGLE:
+            speed = max(MIN_SPEED, MAX_SPEED - int((abs(angle)*SPEED_SCALAR)))
+        else: speed = MAX_SPEED
+
+        p9.duty_ns(speed)
+        # print(f"angle is {angle}, sigma is {turn_angle}, speed is {speed}")
         p7.duty_ns(turn_angle)
 
     else:
         # print("track not detected, braking")
         led_off()
-        p9.duty_ns(MIN_SPEED) # slow down a lot
+        if KILL==1:
+            p9.duty_ns(1500000)
+        else:
+            p9.duty_ns(MIN_SPEED) # slow down a lot
         if last_seen==RIGHT:
             turn_angle = convert_angle(OFFROAD_ANGLE)
             p7.duty_ns(turn_angle) # turn right
