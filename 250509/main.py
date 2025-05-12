@@ -1,31 +1,33 @@
 import sensor
 import time
 import math
-from machine import PWM, LED
+from pyb import Timer, Pin
+from machine import LED
 
 # Kill Switch: 1 = kill, 0 = no kill
 KILL = 0
 
 # Control constants for ease of use
 # speed ranges from 1,650,000 to 1,562,500. range of 87500
-MAX_SPEED    = 1625000 #5975
-SPEED_SCALAR = 750     #900
+MAX_SPEED    = 1595000 #5975 #1625 #15925
+SPEED_SCALAR = 800     #900  #750
 MIN_SPEED    = 1562500 # also offroad speed for now
 
-TURN_STRENGTH = 11850 # default 10k feels pretty weak
+TURN_STRENGTH = 11750 # default 10k feels pretty weak # 11850
 MAX_SIGMA = 400000
 DEADZONE  = 50000
 DEADZONE_ANGLE = 0
 ANGLE = 5
-ANGLE_OFFSET = -3
+ANGLE_OFFSET = 0
 OFFROAD_ANGLE   = ANGLE+20
 OFFCENTER_ANGLE = ANGLE+10
 OFFCENTER_ZONE = 40
-GREY_THRESH = 170
+GREY_THRESH = 185
 
 LEFT = True
 RIGHT = False
 last_seen = LEFT
+brake_counter=100 #start off braked
 
 # LED Definitions
 redled = LED("LED_RED") # RIGHT
@@ -55,19 +57,36 @@ def convert_angle(theta):
     elif sigma < -1*MAX_SIGMA:
         sigma = -1*MAX_SIGMA
 
-    return int(sigma+1500000)
+    # convert from ns to us
+    sigma/=1000
+    # print(f"angle is {sigma+1500}")
+    # print(f"sigma is {sigma}, angle is {sigma+1500}")
+    return int((sigma + 1500)*(19200/10000))  # microseconds
+    # for older board
 
-#SERVO
-p7 = PWM("P7", freq=100, duty_u16=32768)
+def map_speed_to_duty(speed_ns):
+    # map pulse widths between 1.5ms to 1.65ms to duty cycle (15–20%)
+    speed_percent = 15+((speed_ns - 1500000) * 5 / (1650000 - 1500000))
+    print(f"motor is {speed_percent}%")
+    return int(speed_percent)
+
+# SERVO - using Timer for P7
+servo_timer = Timer(4, freq=1600)
+servo_ch = servo_timer.channel(1, Timer.PWM, pin=Pin("P7"), pulse_width=1500)
 # 1.1 = Left
 # 1.5 = Straight
 # 1.9 = Right
 
-#MOTOR
-p9 = PWM("P9", freq=100, duty_u16=32768)
+# MOTOR PWM (speed control) - using Timer for P9
+motor_timer = Timer(4, freq=1600) # TODO: make changes to the freq if needed
+motor_ch = motor_timer.channel(3, Timer.PWM, pin=Pin("P9"), pulse_width_percent=15)
 # 1.3 = Full speed reverse
 # 1.5 = Brake
 # 1.65 = Full speed forward
+
+# H-Bridge Direction Control Pins
+ina = Pin("P6", Pin.OUT)
+inb = Pin("P5", Pin.OUT)
 
 # Camera Constants
 GRAYSCALE_THRESHOLD = [(GREY_THRESH, 255)] # 200, 255 initially
@@ -89,8 +108,11 @@ clock = time.clock()  # Tracks FPS.
 led_off()
 blueled.on()
 # STARTUP: In neutral for at least 5 seconds
-p7.duty_ns(1500000)
-p9.duty_ns(1500000)
+servo_ch.pulse_width(convert_angle(0))
+motor_ch.pulse_width_percent(15)
+# Set direction FORWARD for H-Bridge
+ina.high()
+inb.low()
 time.sleep_ms(5000)
 blueled.off()
 
@@ -128,6 +150,9 @@ while True:
         else: flags.append(False)
 
     if flags[0]==True and flags[1]==True:
+        brake_counter = 0 # reset brake counter
+        print(f"brake counter is {brake_counter}")
+
         angle = -math.atan((x_vals[0]-x_vals[1])/(y_vals[0]-y_vals[1]))
         angle = math.degrees(angle) * (-1) #convert to degrees and flip because servo seems to be the other way around
 
@@ -138,8 +163,6 @@ while True:
         elif angle<-45:
             angle = -45.00000
 
-
-
         # deadass idk what this does lol
         # if the front x value is greater than 100 then make a slight right turn?
         # gonna comment it out for now.
@@ -147,13 +170,14 @@ while True:
         back = x_vals[1]
         front = x_vals[0]
         if back>(160-OFFCENTER_ZONE) and front>(160-OFFCENTER_ZONE): # right of lane so turn left
-            angle = (-1*OFFCENTER_ANGLE)
+            # angle = (-1*OFFCENTER_ANGLE)
+            angle = (OFFCENTER_ANGLE)
             last_seen = LEFT
         elif back<OFFCENTER_ZONE and front<OFFCENTER_ZONE: # left of lane so turn right
-            angle = OFFCENTER_ANGLE
+            # angle = OFFCENTER_ANGLE
+            angle = (-1*OFFCENTER_ANGLE)
             last_seen = RIGHT
         # # else: angle = 0
-
 
         '''
         MAKE ADJUSTMENTS
@@ -171,32 +195,39 @@ while True:
             led_off()
             greenled.on()
 
-        turn_angle = convert_angle(angle)
+        turn_angle_us = convert_angle(angle)
 
         # brake if kill
         if KILL==1:
-            speed = 1500000
+            motor_ch.pulse_width_percent(15)
         # lower speed if angle is outside the deadzone
         elif abs(angle)>DEADZONE_ANGLE:
             speed = max(MIN_SPEED, MAX_SPEED - int((abs(angle)*SPEED_SCALAR)))
         else: speed = MAX_SPEED
 
-        p9.duty_ns(speed)
-        print(f"angle is {angle}, sigma is {turn_angle}, speed is {speed}")
-        p7.duty_ns(turn_angle)
+        motor_ch.pulse_width_percent(map_speed_to_duty(speed))
+        # print(f"angle is {angle}, sigma is {turn_angle_us}, speed is {speed}")
+        servo_ch.pulse_width(turn_angle_us)
 
     else:
-        # print("track not detected, braking")
         led_off()
+
+        print(f"brake counter is {brake_counter}")
+
         if KILL==1:
-            p9.duty_ns(1500000)
+            motor_ch.pulse_width_percent(17) #15
+        elif brake_counter>=100: # if nothing spotted for a while, then brake
+            motor_ch.pulse_width_percent(17) #15
         else:
-            p9.duty_ns(MIN_SPEED) # slow down a lot
+            motor_ch.pulse_width_percent(17) # slow down a lot, 16
+            # motor_ch.pulse_width_percent(15.0) # slow down a lot
         if last_seen==RIGHT:
-            turn_angle = convert_angle(OFFROAD_ANGLE)
-            p7.duty_ns(turn_angle) # turn right
-            print(f"offroad right, angle is {OFFROAD_ANGLE}, sigma is {turn_angle}")
+            turn_angle_us = convert_angle(OFFROAD_ANGLE)
+            servo_ch.pulse_width(turn_angle_us) # turn right
+            print(f"offroad right, angle is {OFFROAD_ANGLE}, sigma is {turn_angle_us}")
         else: # if LEFT
-            turn_angle = convert_angle(-1*OFFROAD_ANGLE)
-            p7.duty_ns(turn_angle) # turn left
-            print(f"offroad left, angle is {OFFROAD_ANGLE}, sigma is {turn_angle}")
+            turn_angle_us = convert_angle(-1*OFFROAD_ANGLE)
+            servo_ch.pulse_width(turn_angle_us) # turn left
+            print(f"offroad left, angle is {OFFROAD_ANGLE}, sigma is {turn_angle_us}")
+
+        brake_counter+=1

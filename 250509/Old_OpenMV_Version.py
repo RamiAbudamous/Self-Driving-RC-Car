@@ -1,27 +1,27 @@
 import sensor
 import time
 import math
-from machine import PWM, LED
+from machine import PWM, LED, PIN
 
 # Kill Switch: 1 = kill, 0 = no kill
 KILL = 0
 
 # Control constants for ease of use
 # speed ranges from 1,650,000 to 1,562,500. range of 87500
-MAX_SPEED    = 1625000 #5975
-SPEED_SCALAR = 750     #900
+MAX_SPEED    = 1592500 #5975 #1625
+SPEED_SCALAR = 800     #900  #750
 MIN_SPEED    = 1562500 # also offroad speed for now
 
-TURN_STRENGTH = 11850 # default 10k feels pretty weak
+TURN_STRENGTH = 11750 # default 10k feels pretty weak # 11850
 MAX_SIGMA = 400000
 DEADZONE  = 50000
 DEADZONE_ANGLE = 0
 ANGLE = 5
-ANGLE_OFFSET = -3
+ANGLE_OFFSET = 0
 OFFROAD_ANGLE   = ANGLE+20
 OFFCENTER_ANGLE = ANGLE+10
 OFFCENTER_ZONE = 40
-GREY_THRESH = 170
+GREY_THRESH = 180
 
 LEFT = True
 RIGHT = False
@@ -64,10 +64,18 @@ p7 = PWM("P7", freq=100, duty_u16=32768)
 # 1.9 = Right
 
 #MOTOR
-p9 = PWM("P9", freq=100, duty_u16=32768)
+p9 = PWM("P9", freq=1600, duty_u16=0)
 # 1.3 = Full speed reverse
 # 1.5 = Brake
 # 1.65 = Full speed forward
+
+# H-Bridge Direction Control Pins 
+ina = Pin("P6", Pin.OUT)
+inb = Pin("P5", Pin.OUT)
+
+def map_speed_to_duty(speed_ns):
+    return int((speed_ns - 1500000) * 65535 / (1650000 - 1500000))
+    # TODO: should the 1650000 be MAX_SPEED?
 
 # Camera Constants
 GRAYSCALE_THRESHOLD = [(GREY_THRESH, 255)] # 200, 255 initially
@@ -90,7 +98,10 @@ led_off()
 blueled.on()
 # STARTUP: In neutral for at least 5 seconds
 p7.duty_ns(1500000)
-p9.duty_ns(1500000)
+p9.duty_u16(0) # percentage of width
+# Set direction FORWARD for H-Bridge
+ina.high()
+inb.low()
 time.sleep_ms(5000)
 blueled.off()
 
@@ -175,23 +186,23 @@ while True:
 
         # brake if kill
         if KILL==1:
-            speed = 1500000
+            p9.duty_u16(0) # 0 percent
         # lower speed if angle is outside the deadzone
         elif abs(angle)>DEADZONE_ANGLE:
             speed = max(MIN_SPEED, MAX_SPEED - int((abs(angle)*SPEED_SCALAR)))
         else: speed = MAX_SPEED
 
-        p9.duty_ns(speed)
-        print(f"angle is {angle}, sigma is {turn_angle}, speed is {speed}")
+        p9.duty_u16(map_speed_to_duty(speed))
+        # print(f"angle is {angle}, sigma is {turn_angle}, speed is {speed}")
         p7.duty_ns(turn_angle)
 
     else:
         # print("track not detected, braking")
         led_off()
         if KILL==1:
-            p9.duty_ns(1500000)
+            p9.duty_u16(0) # TODO: Should this be 0? or 1500000?
         else:
-            p9.duty_ns(MIN_SPEED) # slow down a lot
+            p9.duty_u16(map_speed_to_duty(MIN_SPEED)) # slow down a lot
         if last_seen==RIGHT:
             turn_angle = convert_angle(OFFROAD_ANGLE)
             p7.duty_ns(turn_angle) # turn right
