@@ -3,30 +3,12 @@ import time
 import math
 from pyb import Timer, Pin
 from machine import LED
+import config
 
 # Kill Switch: 1 = kill, 0 = no kill
 KILL = 0
 
-# Control constants for ease of use
-# speed ranges from 1,650 to 1,562. range of 87.
-MAX_SPEED    = 1595 #5975 #1625 #15925
-SPEED_SCALAR = 800  # how much the car should slow down while turning #900  #750
-MIN_SPEED    = 1562 # also offroad speed for now
-
-TURN_STRENGTH = 11750 # default 10k feels pretty weak # 11850
-MAX_SIGMA = 400000 #cant fix these because theyre calculated before the ns to us conversion
-DEADZONE  = 50000
-DEADZONE_ANGLE = 0
-ANGLE = 5
-ANGLE_OFFSET = 0
-OFFROAD_ANGLE   = ANGLE+20
-OFFCENTER_ANGLE = ANGLE+10
-OFFCENTER_ZONE = 40
-GREY_THRESH = 185
-
-LEFT = True
-RIGHT = False
-last_seen = LEFT
+last_seen = config.LEFT
 brake_counter=100 #start off braked
 
 # LED Definitions
@@ -41,12 +23,12 @@ def led_off():
 def convert_angle(theta):
 
     # make compatible with PWM
-    sigma = int(theta * TURN_STRENGTH)
-    if sigma > -1*DEADZONE and sigma < DEADZONE:
+    sigma = int(theta * config.TURN_STRENGTH)
+    if sigma > -1*config.DEADZONE and sigma < config.DEADZONE:
         sigma = 0
 
     # floor and ceiling, and convert from ns to us
-    sigma = int(max((-1*MAX_SIGMA), min(MAX_SIGMA, sigma))/1000)
+    sigma = int(max((-1*config.MAX_SIGMA), min(config.MAX_SIGMA, sigma))/1000)
 
     # why do we subtract the deadzone amount when we already have a floor/ceiling? commented out.
     # elif sigma < 0:
@@ -58,7 +40,7 @@ def convert_angle(theta):
     return int((sigma + 1500)*(19200/10000))  # microseconds
 
 def convert_speed(input_speed):
-    speed = max(1500, min(MAX_SPEED, input_speed)) # clip speed
+    speed = max(1500, min(config.MAX_SPEED, input_speed)) # clip speed
     return int(speed*(19200/10000)) #scale speed and return
 
 # SERVO - using Timer for P7
@@ -80,7 +62,7 @@ ina = Pin("P6", Pin.OUT)
 inb = Pin("P5", Pin.OUT)
 
 # Camera Constants
-GRAYSCALE_THRESHOLD = [(GREY_THRESH, 255)] # 200, 255 initially
+GRAYSCALE_THRESHOLD = [(config.GREY_THRESH, 255)] # 200, 255 initially
 ROIS = [  # [ROI, weight]
     (0, 40, 160, 10, 0.7),  # ROI0, top/front
     (0, 110, 160, 10, 0.7)  # ROI1, bottom/back
@@ -147,7 +129,7 @@ while True:
         angle = -math.atan((x_vals[0]-x_vals[1])/(y_vals[0]-y_vals[1]))
         angle = math.degrees(angle) * (-1) #convert to degrees and flip because servo seems to be the other way around
 
-        angle += ANGLE_OFFSET
+        angle += config.ANGLE_OFFSET
 
         if angle>45: #ensure that the angle is within the -45 to 45 range
             angle = 45.00000
@@ -160,28 +142,28 @@ while True:
 
         back = x_vals[1]
         front = x_vals[0]
-        if back>(160-OFFCENTER_ZONE) and front>(160-OFFCENTER_ZONE): # right of lane so turn left
+        if back>(160-config.OFFCENTER_ZONE) and front>(160-config.OFFCENTER_ZONE): # right of lane so turn left
             # angle = (-1*OFFCENTER_ANGLE)
-            angle = (OFFCENTER_ANGLE)
-            last_seen = LEFT
-        elif back<OFFCENTER_ZONE and front<OFFCENTER_ZONE: # left of lane so turn right
+            angle = (config.OFFCENTER_ANGLE)
+            last_seen = config.LEFT
+        elif back<config.OFFCENTER_ZONE and front<config.OFFCENTER_ZONE: # left of lane so turn right
             # angle = OFFCENTER_ANGLE
-            angle = (-1*OFFCENTER_ANGLE)
-            last_seen = RIGHT
+            angle = (-1*config.OFFCENTER_ANGLE)
+            last_seen = config.RIGHT
         # # else: angle = 0
 
         '''
         MAKE ADJUSTMENTS
         '''
         # enable led based on angle and get sigma
-        if angle<(-1*ANGLE): # left
+        if angle<(-1*config.ANGLE): # left
             led_off()
             blueled.on()
-            last_seen = LEFT
-        elif angle>ANGLE: # right
+            last_seen = config.LEFT
+        elif angle>config.ANGLE: # right
             led_off()
             redled.on()
-            last_seen = RIGHT
+            last_seen = config.RIGHT
         else: #straight
             led_off()
             greenled.on()
@@ -192,9 +174,9 @@ while True:
         if KILL==1:
             motor_ch.pulse_width(convert_speed(1500))
         # lower speed if angle is outside the deadzone
-        elif abs(angle)>DEADZONE_ANGLE:
-            speed = max(MIN_SPEED, MAX_SPEED - int((abs(angle)*SPEED_SCALAR)))
-        else: speed = MAX_SPEED
+        elif abs(angle)>config.DEADZONE_ANGLE:
+            speed = max(config.MIN_SPEED, config.MAX_SPEED - int((abs(angle)*config.SPEED_SCALAR)))
+        else: speed = config.MAX_SPEED
 
         motor_ch.pulse_width(convert_speed(speed))
         # print(f"angle is {angle}, sigma is {turn_angle_us}, speed is {speed}")
@@ -210,15 +192,15 @@ while True:
         elif brake_counter>=100: # if nothing spotted for a while, then brake
             motor_ch.pulse_width(convert_speed(1500))
         else:
-            motor_ch.pulse_width(convert_speed(MIN_SPEED)) # slow down a lot
+            motor_ch.pulse_width(convert_speed(config.MIN_SPEED)) # slow down a lot
 
-        if last_seen==RIGHT:
-            turn_angle_us = convert_angle(OFFROAD_ANGLE)
+        if last_seen==config.RIGHT:
+            turn_angle_us = convert_angle(config.OFFROAD_ANGLE)
             servo_ch.pulse_width(turn_angle_us) # turn right
-            print(f"offroad right, angle is {OFFROAD_ANGLE}, sigma is {turn_angle_us}")
+            print(f"offroad right, angle is {config.OFFROAD_ANGLE}, sigma is {turn_angle_us}")
         else: # if LEFT
-            turn_angle_us = convert_angle(-1*OFFROAD_ANGLE)
+            turn_angle_us = convert_angle(-1*config.OFFROAD_ANGLE)
             servo_ch.pulse_width(turn_angle_us) # turn left
-            print(f"offroad left, angle is {OFFROAD_ANGLE}, sigma is {turn_angle_us}")
+            print(f"offroad left, angle is {config.OFFROAD_ANGLE}, sigma is {turn_angle_us}")
 
         brake_counter+=1
