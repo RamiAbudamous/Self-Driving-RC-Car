@@ -8,13 +8,13 @@ from machine import LED
 KILL = 0
 
 # Control constants for ease of use
-# speed ranges from 1,650,000 to 1,562,500. range of 87500
-MAX_SPEED    = 1595000 #5975 #1625 #15925
-SPEED_SCALAR = 800     #900  #750
-MIN_SPEED    = 1562500 # also offroad speed for now
+# speed ranges from 1,650 to 1,562. range of 87.
+MAX_SPEED    = 1595 #5975 #1625 #15925
+SPEED_SCALAR = 800  # how much the car should slow down while turning #900  #750
+MIN_SPEED    = 1562 # also offroad speed for now
 
 TURN_STRENGTH = 11750 # default 10k feels pretty weak # 11850
-MAX_SIGMA = 400000
+MAX_SIGMA = 400000 #cant fix these because theyre calculated before the ns to us conversion
 DEADZONE  = 50000
 DEADZONE_ANGLE = 0
 ANGLE = 5
@@ -45,41 +45,32 @@ def convert_angle(theta):
     if sigma > -1*DEADZONE and sigma < DEADZONE:
         sigma = 0
 
+    # floor and ceiling, and convert from ns to us
+    sigma = int(max((-1*MAX_SIGMA), min(MAX_SIGMA, sigma))/1000)
+
     # why do we subtract the deadzone amount when we already have a floor/ceiling? commented out.
     # elif sigma < 0:
     #     sigma += DEADZONE
     # elif sigma > 0:
     #     sigma -= DEADZONE
 
-    # floor and ceiling
-    if sigma > MAX_SIGMA:
-        sigma = MAX_SIGMA
-    elif sigma < -1*MAX_SIGMA:
-        sigma = -1*MAX_SIGMA
-
-    # convert from ns to us
-    sigma/=1000
-    # print(f"angle is {sigma+1500}")
     # print(f"sigma is {sigma}, angle is {sigma+1500}")
     return int((sigma + 1500)*(19200/10000))  # microseconds
-    # for older board
 
-def map_speed_to_duty(speed_ns):
-    # map pulse widths between 1.5ms to 1.65ms to duty cycle (15–20%)
-    speed_percent = 15+((speed_ns - 1500000) * 5 / (1650000 - 1500000))
-    print(f"motor is {speed_percent}%")
-    return int(speed_percent)
+def convert_speed(input_speed):
+    speed = max(1500, min(MAX_SPEED, input_speed)) # clip speed
+    return int(speed*(19200/10000)) #scale speed and return
 
 # SERVO - using Timer for P7
-servo_timer = Timer(4, freq=1600)
+servo_timer = Timer(4, freq=100)
 servo_ch = servo_timer.channel(1, Timer.PWM, pin=Pin("P7"), pulse_width=1500)
 # 1.1 = Left
 # 1.5 = Straight
 # 1.9 = Right
 
-# MOTOR PWM (speed control) - using Timer for P9
-motor_timer = Timer(4, freq=1600) # TODO: make changes to the freq if needed
-motor_ch = motor_timer.channel(3, Timer.PWM, pin=Pin("P9"), pulse_width_percent=15)
+# MOTOR PWM - using Timer for P9
+motor_timer = Timer(4, freq=100)
+motor_ch = motor_timer.channel(3, Timer.PWM, pin=Pin("P9"), pulse_width=1500)
 # 1.3 = Full speed reverse
 # 1.5 = Brake
 # 1.65 = Full speed forward
@@ -109,7 +100,7 @@ led_off()
 blueled.on()
 # STARTUP: In neutral for at least 5 seconds
 servo_ch.pulse_width(convert_angle(0))
-motor_ch.pulse_width_percent(15)
+motor_ch.pulse_width(convert_speed(1500))
 # Set direction FORWARD for H-Bridge
 ina.high()
 inb.low()
@@ -199,28 +190,28 @@ while True:
 
         # brake if kill
         if KILL==1:
-            motor_ch.pulse_width_percent(15)
+            motor_ch.pulse_width(convert_speed(1500))
         # lower speed if angle is outside the deadzone
         elif abs(angle)>DEADZONE_ANGLE:
             speed = max(MIN_SPEED, MAX_SPEED - int((abs(angle)*SPEED_SCALAR)))
         else: speed = MAX_SPEED
 
-        motor_ch.pulse_width_percent(map_speed_to_duty(speed))
+        motor_ch.pulse_width(convert_speed(speed))
         # print(f"angle is {angle}, sigma is {turn_angle_us}, speed is {speed}")
         servo_ch.pulse_width(turn_angle_us)
 
-    else:
+    else: # OFFROAD
         led_off()
 
         print(f"brake counter is {brake_counter}")
 
         if KILL==1:
-            motor_ch.pulse_width_percent(17) #15
+            motor_ch.pulse_width(convert_speed(1500))
         elif brake_counter>=100: # if nothing spotted for a while, then brake
-            motor_ch.pulse_width_percent(17) #15
+            motor_ch.pulse_width(convert_speed(1500))
         else:
-            motor_ch.pulse_width_percent(17) # slow down a lot, 16
-            # motor_ch.pulse_width_percent(15.0) # slow down a lot
+            motor_ch.pulse_width(convert_speed(MIN_SPEED)) # slow down a lot
+
         if last_seen==RIGHT:
             turn_angle_us = convert_angle(OFFROAD_ANGLE)
             servo_ch.pulse_width(turn_angle_us) # turn right
