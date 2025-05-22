@@ -30,11 +30,15 @@ RIGHT = False
 # Camera Constants
 GRAYSCALE_THRESHOLD = [(GREY_THRESH, 255)] # 200, 255 initially
 ROIS = [  # [ROI, weight], ROI is (left, top, x from left, y from top)
-    # 0 to 160 on x axis, 40 to 50 on y axis
-    (0, 40, 160, 10, 0.7),  # ROI0, top/front
-    # 0 to 160 on x axis, 110 to 120 on y axis
-    (0, 110, 160, 10, 0.7)  # ROI1, bottom/back
+    # 0 to 80 on x axis, 40 to 50 on y axis
+    (0, 40, 80, 10, 0.7),  # ROI0, top left/front left
 
-    # for lanes, we want (0, y, 80, 10, 0.7) and (80, y, 80, 10, 0.7)
-    # x0 and x1 are top, then x2 and x3 are bot. same with y0-y3 and flag0-flag3
+    # 0 to 80 on x axis, 110 to 120 on y axis
+    (0, 110, 80, 10, 0.7)  # ROI1, bottom left/back left
+
+    # 80 to 160 on x axis, 40 to 50 on y axis
+    (80, 40, 80, 10, 0.7),  # ROI2, top right/front right
+
+    # 80 to 160 on x axis, 110 to 120 on y axis
+    (80, 110, 80, 10, 0.7)  # ROI3, bottom right/back right
 ]
