@@ -1,10 +1,8 @@
-import time, math, sensor
+import car
 from pyb import Timer, Pin
 from machine import LED
-import config
-import motor
-import steer
-import car
+import config, motor, steer
+import time, math, sensor
 
 # create car object and initialize
 car = car.openMV() # create the microcontroller object

@@ -42,7 +42,7 @@ class openMV:
     clock = None
     last_seen = config.LEFT
     brake_counter=100 #start off braked
-    angle_turn = 0 #start off at no angle
+    angle_turn = 0.0 #start off at no angle
 
     '''FUNCTIONS'''
     # turn off all LEDs
@@ -86,7 +86,7 @@ class openMV:
             self.brake_counter = 0 # reset brake counter
             
             # takes the blobs and turns them into a proper turn angle
-            self.get_turn_angle()
+            steer.get_turn_angle()
 
             # executes changes
             steer.turn(self)
@@ -129,41 +129,6 @@ class openMV:
                 self.y_vals.append(largest_blob.cy())
                 self.flags.append(True)
             else: self.flags.append(False)
-
-    def get_turn_angle(self):
-        angle_left = self.find_blob_angle(0) # 0 for left
-        angle_right = self.find_blob_angle(2) # 2 for right
-
-        # TODO: LOGIC HERE TO CONVERT THE LEFT AND RIGHT ANGLES TO ONE UNIFIED TURN ANGLE
-
-        self.angle_turn = "turn angle goes here" # set the turn angle
-
-    # take the blobs and find the angles
-    def find_blob_angle(self, i): # i will be 0 or 2, 0 for left, 2 for right
-        angle = -math.atan((self.x_vals[0+i]-self.x_vals[1+i])/(self.y_vals[0+i]-self.y_vals[1+i]))
-        angle = math.degrees(angle) * (-1) #convert to degrees and flip because servo seems to be the other way around
-
-        angle += config.ANGLE_OFFSET[i]
-
-        if angle>45: #ensure that the angle is within the -45 to 45 range
-            angle = 45.00000
-        elif angle<-45:
-            angle = -45.00000
-
-        back = self.x_vals[1+i]
-        front = self.x_vals[0+i]
-        # TODO: this code might be flawed because it runs once for left and once for right. fix that
-        if back>(160-config.OFFCENTER_ZONE) and front>(160-config.OFFCENTER_ZONE): # right of lane so turn left
-            # angle = (-1*OFFCENTER_ANGLE)
-            angle = (config.OFFCENTER_ANGLE)
-            self.last_seen = config.LEFT
-        elif back<config.OFFCENTER_ZONE and front<config.OFFCENTER_ZONE: # left of lane so turn right
-            # angle = OFFCENTER_ANGLE
-            angle = (-1*config.OFFCENTER_ANGLE)
-            self.last_seen = config.RIGHT
-        # # else: angle = 0
-
-        return angle
     
     # speed detector functions
     def timer_tick(self, timer):
