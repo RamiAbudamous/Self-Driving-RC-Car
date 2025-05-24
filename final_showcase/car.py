@@ -23,6 +23,16 @@ class openMV:
     ina = Pin("P6", Pin.OUT)
     inb = Pin("P5", Pin.OUT)
 
+    # Speed detector
+    tim = Timer(-1, freq=1, callback=timer_tick)
+    # tim = Timer(-1, freq=1, callback=self.timer_tick)
+    pin = Pin("P6", Pin.IN) # pin.pull_up is an internal resistor
+    rotations = 0
+    pin.irq(trigger = Pin.IRQ_FALLING, handler=isr) # activate on falling edge
+    # pin.irq(trigger = Pin.IRQ_FALLING, handler=self.isr) # activate on falling edge
+    velocity = 1      # update with a reasonable starting velocity
+    max_velocity = 1  # update with a reasonable maximum  velocity
+
     # LED Definitions
     redled = LED("LED_RED") # RIGHT
     greenled = LED("LED_GREEN") # STRAIGHT
@@ -154,6 +164,19 @@ class openMV:
         # # else: angle = 0
 
         return angle
+    
+    # speed detector functions
+    def timer_tick(self, timer):
+        velocity = config.VELOCITY_CONSTANT_MULT*self.rotations
+        
+        print(f"The velocity was {velocity}cm/s, ({self.rotations} rotations) ")
+        if velocity > self.max_velocity:
+            print(f"velocity > max velocity ({velocity}>{self.max_velocity})")
+            self.max_velocity = velocity
+        
+        self.velocity = velocity
+        self.rotations=0
 
-
-
+    def isr(self, p):
+        #print("interrupted")
+        self.rotations+=1

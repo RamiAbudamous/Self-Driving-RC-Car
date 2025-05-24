@@ -10,6 +10,7 @@ MAX_SPEED    = 1595 #5975 #1625 #15925
 SPEED_SCALAR = 800  #900  #750    # how much the car should slow down while turning
 MIN_SPEED    = 1562 # also offroad speed for now
 
+VELOCITY_CONSTANT_MULT = 31
 
 TURN_STRENGTH = 11750 # default 10k feels pretty weak # 11850
 MAX_SIGMA = 400000 #cant fix these because theyre calculated before the ns to us conversion
@@ -21,12 +22,10 @@ OFFROAD_ANGLE   = ANGLE+20
 OFFCENTER_ANGLE = ANGLE+10
 OFFCENTER_ZONE = 40
 
-
-GREY_THRESH = 185
-
 LEFT = True
 RIGHT = False
 
+GREY_THRESH = 185
 # Camera Constants
 GRAYSCALE_THRESHOLD = [(GREY_THRESH, 255)] # 200, 255 initially
 ROIS = [  # [ROI, weight], ROI is (left, top, x from left, y from top)

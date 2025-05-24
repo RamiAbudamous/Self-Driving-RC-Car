@@ -16,7 +16,7 @@ def go(car):
     # if not turning, go max speed
     else: speed = config.MAX_SPEED
 
-    car.motor_ch.pulse_width(convert_speed(speed))
+    car.motor_ch.pulse_width(convert_speed(speed_detect(car, speed)))
     # print(f"angle is {angle}, sigma is {turn_angle_us}, speed is {speed}")
 
 def offroad(car):
@@ -29,3 +29,8 @@ def offroad(car):
 
     else: # offroad but still alive, so slow down but dont stop.
         car.motor_ch.pulse_width(convert_speed(config.MIN_SPEED)) # slow down a lot
+    
+def speed_detect(car, speed):
+    # basically just multiply speed by max_velocity / velocity to always keep it at basically max
+    speed_ratio = max(1, min(1.5, float(car.max_velocity / car.velocity))) # take the ratio and ensure its between 1 and 1.5 for safety (so it doesnt randomly go like 5x speed and burn the H Bridge)
+    return int(speed_ratio * speed)
