@@ -26,7 +26,7 @@ class openMV:
     # Speed detector
     tim = Timer(-1, freq=1, callback=timer_tick)
     # tim = Timer(-1, freq=1, callback=self.timer_tick)
-    pin = Pin("P6", Pin.IN) # pin.pull_up is an internal resistor
+    pin = Pin("P4", Pin.IN) # pin.pull_up is an internal resistor
     rotations = 0
     pin.irq(trigger = Pin.IRQ_FALLING, handler=isr) # activate on falling edge
     # pin.irq(trigger = Pin.IRQ_FALLING, handler=self.isr) # activate on falling edge
