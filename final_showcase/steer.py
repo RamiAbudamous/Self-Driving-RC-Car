@@ -34,15 +34,11 @@ def get_turn_angle(car):
 
 # take the blobs and find the angles
 def find_blob_angle(car, i): # i will be 0 or 2, 0 for left, 2 for right
-    angle = -math.atan((car.x_vals[0+i]-car.x_vals[1+i])/(car.y_vals[0+i]-car.y_vals[1+i]))
-    angle = math.degrees(angle) * (-1) #convert to degrees and flip because servo seems to be the other way around
-
-    angle += config.ANGLE_OFFSET[i]
-
-    if angle>45: #ensure that the angle is within the -45 to 45 range
-        angle = 45.00000
-    elif angle<-45:
-        angle = -45.00000
+    # angle = -math.atan((car.x_vals[0+i]-car.x_vals[1+i])/(car.y_vals[0+i]-car.y_vals[1+i]))
+    # angle = math.degrees(angle) * (-1) #convert to degrees and flip because servo seems to be the other way around
+    # angle += config.ANGLE_OFFSET[i]
+    angle = math.degrees(math.atan((car.x_vals[0+i]-car.x_vals[1+i])/(car.y_vals[0+i]-car.y_vals[1+i]))) + config.ANGLE_OFFSET[i]
+    angle = max(-45, min(45, angle)) # ensure angle is between -45 and 45 degrees
 
     back = car.x_vals[1+i]
     front = car.x_vals[0+i]
