@@ -1,7 +1,27 @@
 import time, sensor
 from pyb import Timer, Pin
 from machine import LED
-import config, steer, motor, speed
+import config, steer, motor
+
+def timer_tick(timer):
+    if config.rotations>0:
+        config.velocity = config.VELOCITY_CONSTANT_MULT*config.rotations
+    else:
+        config.velocity = 1
+
+    print(f"The velocity was {config.velocity}cm/s, ({config.rotations} rotations)")
+    if config.velocity > config.max_velocity:
+        # print(f"velocity > max velocity ({velocity}>{self.max_velocity})")
+        config.max_velocity = config.velocity
+
+    config.rotations=0
+
+def isr(p):
+    global rotations
+    #print("interrupted")
+    config.rotations+=1
+
+
 
 class openMV:
     '''VARIABLES'''
@@ -24,13 +44,11 @@ class openMV:
     inb = Pin("P5", Pin.OUT)
 
     # Speed detector
-    tim = Timer(2, freq=1, callback=speed.timer_tick)
+    tim = Timer(2, freq=1, callback=timer_tick)
     pin = Pin("P4", Pin.IN) # pin.pull_up is an internal resistor
-    rotations = 0
-    pin.irq(trigger = Pin.IRQ_FALLING, handler=speed.isr) # activate on falling edge
-    # pin.irq(trigger = Pin.IRQ_FALLING, handler=self.isr) # activate on falling edge
-    velocity = 1      # update with a reasonable starting velocity
-    max_velocity = 1  # update with a reasonable maximum  velocity
+    pin.irq(trigger = Pin.IRQ_FALLING, handler=isr) # activate on falling edge
+    # velocity = 1      # update with a reasonable starting velocity
+    # max_velocity = 1  # update with a reasonable maximum  velocity
 
     # LED Definitions
     redled = LED("LED_RED") # RIGHT

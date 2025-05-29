@@ -3,6 +3,10 @@
 
 # Kill Switch: 1 = kill, 0 = no kill
 KILL = 0
+# Brake counter: 1 = count, 0 = no count. if counting, will break after 100 frames of no road
+COUNT_BRAKES = 0
+# Lane Following: 1 = Lane, 0 = Line
+FOLLOW_LANE = 1
 
 
 # speed ranges from 1,650 to 1,562. range of 87.
@@ -11,6 +15,9 @@ SPEED_SCALAR = 800  #900  #750    # how much the car should slow down while turn
 MIN_SPEED    = 1562 # also offroad speed for now
 
 VELOCITY_CONSTANT_MULT = 31
+rotations = 0
+velocity = 1
+max_velocity = 1
 
 TURN_STRENGTH = 11750 # default 10k feels pretty weak # 11850
 MAX_SIGMA = 400000 #cant fix these because theyre calculated before the ns to us conversion
@@ -20,12 +27,12 @@ ANGLE = 5
 ANGLE_OFFSET = [0, None, 0] # ANGLE_OFFSET[0] = left offset, ANGLE_OFFSET[2] = right offset
 OFFROAD_ANGLE   = ANGLE+20
 OFFCENTER_ANGLE = ANGLE+10
-OFFCENTER_ZONE = 40
+OFFCENTER_ZONE = 30
 
 LEFT = True
 RIGHT = False
 
-GREY_THRESH = 150
+GREY_THRESH = 185
 # Camera Constants
 GRAYSCALE_THRESHOLD = [(GREY_THRESH, 255)] # 200, 255 initially
 ROIS = [  # [ROI, weight], ROI is (left, top, x from left, y from top)
