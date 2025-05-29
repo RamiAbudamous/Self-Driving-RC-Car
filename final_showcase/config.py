@@ -23,7 +23,9 @@ TURN_STRENGTH = 11750 # default 10k feels pretty weak # 11850
 MAX_SIGMA = 400000 #cant fix these because theyre calculated before the ns to us conversion
 DEADZONE  = 50000
 DEADZONE_ANGLE = 0
+STRAIGHT_WIDTH = 5
 ANGLE = 5
+ANGLE_DIFF_OFFSET = .6
 ANGLE_OFFSET = [0, None, 0] # ANGLE_OFFSET[0] = left offset, ANGLE_OFFSET[2] = right offset
 OFFROAD_ANGLE   = ANGLE+20
 OFFCENTER_ANGLE = ANGLE+10
@@ -40,11 +42,11 @@ ROIS = [  # [ROI, weight], ROI is (left, top, x from left, y from top)
     (0, 40, 80, 10, 0.7),  # ROI0, top left/front left
 
     # 0 to 80 on x axis, 110 to 120 on y axis
-    (0, 110, 80, 10, 0.7),  # ROI1, bottom left/back left
+    # (0, 110, 80, 10, 0.7),  # ROI1, bottom left/back left
 
     # 80 to 160 on x axis, 40 to 50 on y axis
     (80, 40, 80, 10, 0.7),  # ROI2, top right/front right
 
     # 80 to 160 on x axis, 110 to 120 on y axis
-    (80, 110, 80, 10, 0.7)  # ROI3, bottom right/back right
+    # (80, 110, 80, 10, 0.7)  # ROI3, bottom right/back right
 ]

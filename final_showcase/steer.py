@@ -21,16 +21,35 @@ def convert_angle(theta):
     return int((sigma + 1500)*(19200/10000))  # microseconds
 
 def get_turn_angle(car):
-    angle_left = find_blob_angle(car, 0) # 0 for left
-    angle_right = find_blob_angle(car, 2) # 2 for right
+    # TODO: only use if doing angles. maybe for offroad calc?
+    # angle_left = find_blob_angle(car, 0) # 0 for left
+    # angle_right = find_blob_angle(car, 2) # 2 for right
 
-    # TODO: LOGIC HERE TO CONVERT THE LEFT AND RIGHT ANGLES TO ONE UNIFIED TURN ANGLE
+    left_distance = car.x_vals[0] - 80
+    right_distance = 160 - car.x_vals[1]
 
-    # first thing to test is just averaging them out
-    angle = (angle_left+angle_right)/2
+    # turn_magnitude = right_distance - left_distance
+    # if abs(turn_magnitude) > config.STRAIGHT_WIDTH:
+        # car.turn_angle = turn_magnitude
+    # else:
+    #     car.turn_angle = 0
+    
+    # if left_distance > right_distance + config.STRAIGHT_WIDTH:
+    #     pass
+    #     # turn left
+    # if right_distance > left_distance + config.STRAIGHT_WIDTH:
+    #     pass
+    #     # turn left
+    # else:
+    #     pass
+    #     # turn straight
 
 
-    car.angle_turn = angle # set the turn angle
+    car.angle_turn = config.ANGLE_DIFF_OFFSET * (right_distance - left_distance) # set the turn angle
+
+
+    print(f"angle = {car.angle_turn}, left = {left_distance}, right = {right_distance}")
+    # car.angle_turn = angle # set the turn angle
 
 # take the blobs and find the angles
 def find_blob_angle(car, i): # i will be 0 or 2, 0 for left, 2 for right

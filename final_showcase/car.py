@@ -57,10 +57,8 @@ class openMV:
 
     # other variables
     clock = None
-    img = None
-    x_vals = [0, 0, 0, 0]
-    y_vals = [0, 0, 0, 0]
-    flags = [False, False, False, False]
+    # img = None
+    x_vals = []
     last_seen = config.LEFT
     brake_counter=100 #start off braked
     angle_turn = 0.0 #start off at no angle
@@ -103,7 +101,7 @@ class openMV:
 
         self.find_blobs()
 
-        if self.flags[0] and self.flags[1] and self.flags[2] and self.flags[3]:
+        if self.flags[0] and self.flags[1]:
             self.brake_counter = 0 # reset brake counter
 
             # takes the blobs and turns them into a proper turn angle
@@ -126,10 +124,7 @@ class openMV:
     # take the image and find the blobs
     def find_blobs(self):
         # reset values
-        old_x_vals = self.x_vals
-        old_y_vals = self.y_vals
         self.x_vals = []
-        self.y_vals = []
         self.flags = []
 
         for r in config.ROIS:
@@ -149,14 +144,11 @@ class openMV:
                 self.img.draw_cross(center_blob.cx(), center_blob.cy(), color=0)
 
                 self.x_vals.append(largest_blob.cx())
-                self.y_vals.append(largest_blob.cy())
                 self.flags.append(True)
             else:
-                self.x_vals.append(old_x_vals[len(self.flags)])
-                self.y_vals.append(old_y_vals[len(self.flags)])
                 self.flags.append(False)
 
-        if self.flags[0] and self.flags[1]:
-            self.img.draw_line((self.x_vals[0], self.y_vals[0], self.x_vals[1], self.y_vals[1]), color=0)
-        if self.flags[2] and self.flags[3]:
-            self.img.draw_line((self.x_vals[2], self.y_vals[2], self.x_vals[3], self.y_vals[3]), color=0)
+        # if self.flags[0] and self.flags[1]:
+        #     self.img.draw_line((self.x_vals[0], self.y_vals[0], self.x_vals[1], self.y_vals[1]), color=0)
+        # if self.flags[2] and self.flags[3]:
+        #     self.img.draw_line((self.x_vals[2], self.y_vals[2], self.x_vals[3], self.y_vals[3]), color=0)
