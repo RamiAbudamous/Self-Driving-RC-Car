@@ -21,11 +21,11 @@ def convert_angle(theta):
     return int((sigma + 1500)*(19200/10000))  # microseconds
 
 def get_turn_angle(car):
-    angle_left = car.find_blob_angle(0) # 0 for left
-    angle_right = car.find_blob_angle(2) # 2 for right
+    angle_left = find_blob_angle(car, 0) # 0 for left
+    angle_right = find_blob_angle(car, 2) # 2 for right
 
     # TODO: LOGIC HERE TO CONVERT THE LEFT AND RIGHT ANGLES TO ONE UNIFIED TURN ANGLE
-    
+
     # first thing to test is just averaging them out
     angle = (angle_left+angle_right)/2
 
@@ -44,12 +44,12 @@ def find_blob_angle(car, i): # i will be 0 or 2, 0 for left, 2 for right
     front = car.x_vals[0+i]
     # TODO: this code might be flawed because it runs once for left and once for right. fix that
     if back>(160-config.OFFCENTER_ZONE) and front>(160-config.OFFCENTER_ZONE): # right of lane so turn left
-        # angle = (-1*OFFCENTER_ANGLE)
-        angle = (config.OFFCENTER_ANGLE)
+        angle = (-1*config.OFFCENTER_ANGLE)
+        # angle = (config.OFFCENTER_ANGLE)
         car.last_seen = config.LEFT
     elif back<config.OFFCENTER_ZONE and front<config.OFFCENTER_ZONE: # left of lane so turn right
-        # angle = OFFCENTER_ANGLE
-        angle = (-1*config.OFFCENTER_ANGLE)
+        angle = config.OFFCENTER_ANGLE
+        # angle = (-1*config.OFFCENTER_ANGLE)
         car.last_seen = config.RIGHT
     # # else: angle = 0
 
@@ -61,13 +61,16 @@ def turn(car):
         car.led_off()
         car.blueled.on()
         car.last_seen = config.LEFT
+        print(f"left, angle is {car.angle_turn}")
     elif car.angle_turn>config.ANGLE: # right
         car.led_off()
         car.redled.on()
         car.last_seen = config.RIGHT
+        print(f"right, angle is {car.angle_turn}")
     else: #straight
         car.led_off()
         car.greenled.on()
+        print(f"straight, angle is {car.angle_turn}")
 
     turn_angle_us = convert_angle(car.angle_turn)
     car.servo_ch.pulse_width(turn_angle_us)
@@ -76,8 +79,10 @@ def offroad(car):
     if car.last_seen==config.RIGHT:
         turn_angle_us = convert_angle(config.OFFROAD_ANGLE)
         car.servo_ch.pulse_width(turn_angle_us) # turn right
-        print(f"offroad right, angle is {config.OFFROAD_ANGLE}, sigma is {turn_angle_us}")
+        # print(f"offroad right, angle is {config.OFFROAD_ANGLE}, sigma is {turn_angle_us}")
+        print(f"offroad right, angle is {car.angle_turn}")
     else: # if LEFT
         turn_angle_us = convert_angle(-1*config.OFFROAD_ANGLE)
         car.servo_ch.pulse_width(turn_angle_us) # turn left
-        print(f"offroad left, angle is {config.OFFROAD_ANGLE}, sigma is {turn_angle_us}")
+        # print(f"offroad left, angle is {config.OFFROAD_ANGLE}, sigma is {turn_angle_us}")
+        print(f"offroad left, angle is {car.angle_turn}")

@@ -25,7 +25,7 @@ OFFCENTER_ZONE = 40
 LEFT = True
 RIGHT = False
 
-GREY_THRESH = 185
+GREY_THRESH = 150
 # Camera Constants
 GRAYSCALE_THRESHOLD = [(GREY_THRESH, 255)] # 200, 255 initially
 ROIS = [  # [ROI, weight], ROI is (left, top, x from left, y from top)
@@ -33,7 +33,7 @@ ROIS = [  # [ROI, weight], ROI is (left, top, x from left, y from top)
     (0, 40, 80, 10, 0.7),  # ROI0, top left/front left
 
     # 0 to 80 on x axis, 110 to 120 on y axis
-    (0, 110, 80, 10, 0.7)  # ROI1, bottom left/back left
+    (0, 110, 80, 10, 0.7),  # ROI1, bottom left/back left
 
     # 80 to 160 on x axis, 40 to 50 on y axis
     (80, 40, 80, 10, 0.7),  # ROI2, top right/front right

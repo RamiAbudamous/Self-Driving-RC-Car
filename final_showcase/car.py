@@ -1,7 +1,7 @@
-import time, math, sensor
+import time, sensor
 from pyb import Timer, Pin
 from machine import LED
-import config, steer, motor
+import config, steer, motor, speed
 
 class openMV:
     '''VARIABLES'''
@@ -24,11 +24,10 @@ class openMV:
     inb = Pin("P5", Pin.OUT)
 
     # Speed detector
-    tim = Timer(-1, freq=1, callback=timer_tick)
-    # tim = Timer(-1, freq=1, callback=self.timer_tick)
+    tim = Timer(2, freq=1, callback=speed.timer_tick)
     pin = Pin("P4", Pin.IN) # pin.pull_up is an internal resistor
     rotations = 0
-    pin.irq(trigger = Pin.IRQ_FALLING, handler=isr) # activate on falling edge
+    pin.irq(trigger = Pin.IRQ_FALLING, handler=speed.isr) # activate on falling edge
     # pin.irq(trigger = Pin.IRQ_FALLING, handler=self.isr) # activate on falling edge
     velocity = 1      # update with a reasonable starting velocity
     max_velocity = 1  # update with a reasonable maximum  velocity
@@ -40,6 +39,10 @@ class openMV:
 
     # other variables
     clock = None
+    img = None
+    x_vals = [0, 0, 0, 0]
+    y_vals = [0, 0, 0, 0]
+    flags = [False, False, False, False]
     last_seen = config.LEFT
     brake_counter=100 #start off braked
     angle_turn = 0.0 #start off at no angle
@@ -74,19 +77,19 @@ class openMV:
         # wait 5 seconds then turn off LED to show that initialization is over
         time.sleep_ms(5000)
         self.led_off()
-    
+
     # main loop of car
     def tick(self):
         self.clock.tick()  # Track elapsed milliseconds between snapshots().
-        img = sensor.snapshot()  # Take a picture and return the image.
+        self.img = sensor.snapshot()  # Take a picture and return the image.
 
-        self.blobs(img)
+        self.find_blobs()
 
         if self.flags[0] and self.flags[1] and self.flags[2] and self.flags[3]:
             self.brake_counter = 0 # reset brake counter
-            
+
             # takes the blobs and turns them into a proper turn angle
-            steer.get_turn_angle()
+            steer.get_turn_angle(self)
 
             # executes changes
             steer.turn(self)
@@ -94,7 +97,7 @@ class openMV:
 
         else: # OFFROAD
             self.led_off()
-            print(f"brake counter is {self.brake_counter}")
+            # print(f"brake counter is {self.brake_counter}")
             self.brake_counter+=1
 
             # executes offroad plan
@@ -103,14 +106,16 @@ class openMV:
 
 
     # take the image and find the blobs
-    def blobs(self, img):
+    def find_blobs(self):
         # reset values
+        old_x_vals = self.x_vals
+        old_y_vals = self.y_vals
         self.x_vals = []
         self.y_vals = []
         self.flags = []
 
         for r in config.ROIS:
-            blobs = img.find_blobs(
+            blobs = self.img.find_blobs(
                 config.GRAYSCALE_THRESHOLD,
                 roi=r[0:4],
                 merge=True,
@@ -122,26 +127,18 @@ class openMV:
                 # Find the blob with the most pixels.
                 largest_blob = max(blobs, key=lambda b: b.pixels())
                 center_blob = min(blobs, key=lambda a: abs(a.cx()-80))
-                img.draw_rectangle(center_blob.rect(), color=0)
-                img.draw_cross(center_blob.cx(), center_blob.cy(), color=0)
+                self.img.draw_rectangle(center_blob.rect(), color=0)
+                self.img.draw_cross(center_blob.cx(), center_blob.cy(), color=0)
 
                 self.x_vals.append(largest_blob.cx())
                 self.y_vals.append(largest_blob.cy())
                 self.flags.append(True)
-            else: self.flags.append(False)
-    
-    # speed detector functions
-    def timer_tick(self, timer):
-        velocity = config.VELOCITY_CONSTANT_MULT*self.rotations
-        
-        print(f"The velocity was {velocity}cm/s, ({self.rotations} rotations) ")
-        if velocity > self.max_velocity:
-            print(f"velocity > max velocity ({velocity}>{self.max_velocity})")
-            self.max_velocity = velocity
-        
-        self.velocity = velocity
-        self.rotations=0
+            else:
+                self.x_vals.append(old_x_vals[len(self.flags)])
+                self.y_vals.append(old_y_vals[len(self.flags)])
+                self.flags.append(False)
 
-    def isr(self, p):
-        #print("interrupted")
-        self.rotations+=1
+        if self.flags[0] and self.flags[1]:
+            self.img.draw_line((self.x_vals[0], self.y_vals[0], self.x_vals[1], self.y_vals[1]), color=0)
+        if self.flags[2] and self.flags[3]:
+            self.img.draw_line((self.x_vals[2], self.y_vals[2], self.x_vals[3], self.y_vals[3]), color=0)
