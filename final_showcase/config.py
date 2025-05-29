@@ -1,6 +1,5 @@
 # Control constants for ease of use
 
-
 # Kill Switch: 1 = kill, 0 = no kill
 KILL = 0
 # Brake counter: 1 = count, 0 = no count. if counting, will break after 100 frames of no road
@@ -14,20 +13,24 @@ MAX_SPEED    = 1595 #5975 #1625 #15925
 SPEED_SCALAR = 800  #900  #750    # how much the car should slow down while turning
 MIN_SPEED    = 1562 # also offroad speed for now
 
+# change how strong the turning is
+TURN_STRENGTH = 11750 # default 10k feels pretty weak # 11850
+# change how large the turn angle is
+ANGLE_DIFF_OFFSET = .9
+# these effectively do the same thing, but there is some nuance
+
 VELOCITY_CONSTANT_MULT = 31
 rotations = 0
 velocity = 1
 max_velocity = 1
 
-TURN_STRENGTH = 11750 # default 10k feels pretty weak # 11850
 MAX_SIGMA = 400000 #cant fix these because theyre calculated before the ns to us conversion
 DEADZONE  = 50000
 DEADZONE_ANGLE = 0
 STRAIGHT_WIDTH = 5
 ANGLE = 5
-ANGLE_DIFF_OFFSET = .9
 ANGLE_OFFSET = [0, None, 0] # ANGLE_OFFSET[0] = left offset, ANGLE_OFFSET[2] = right offset
-OFFROAD_ANGLE   = ANGLE+20
+OFFROAD_ANGLE   = ANGLE+25
 OFFCENTER_ANGLE = ANGLE+10
 OFFCENTER_ZONE = 30
 

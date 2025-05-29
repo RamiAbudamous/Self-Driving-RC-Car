@@ -17,7 +17,6 @@ def timer_tick(timer):
     config.rotations=0
 
 def isr(p):
-    global rotations
     #print("interrupted")
     config.rotations+=1
 
@@ -47,8 +46,6 @@ class openMV:
     tim = Timer(2, freq=1, callback=timer_tick)
     pin = Pin("P4", Pin.IN) # pin.pull_up is an internal resistor
     pin.irq(trigger = Pin.IRQ_FALLING, handler=isr) # activate on falling edge
-    # velocity = 1      # update with a reasonable starting velocity
-    # max_velocity = 1  # update with a reasonable maximum  velocity
 
     # LED Definitions
     redled = LED("LED_RED") # RIGHT
