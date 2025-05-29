@@ -25,8 +25,8 @@ def get_turn_angle(car):
     # angle_left = find_blob_angle(car, 0) # 0 for left
     # angle_right = find_blob_angle(car, 2) # 2 for right
 
-    left_distance = car.x_vals[0] - 80
-    right_distance = 160 - car.x_vals[1]
+    left_distance = 80 - car.x_vals[0]
+    right_distance = car.x_vals[1] - 80
 
     # turn_magnitude = right_distance - left_distance
     # if abs(turn_magnitude) > config.STRAIGHT_WIDTH:
@@ -80,16 +80,16 @@ def turn(car):
         car.led_off()
         car.blueled.on()
         car.last_seen = config.LEFT
-        print(f"left, angle is {car.angle_turn}")
+        # print(f"left, angle is {car.angle_turn}")
     elif car.angle_turn>config.ANGLE: # right
         car.led_off()
         car.redled.on()
         car.last_seen = config.RIGHT
-        print(f"right, angle is {car.angle_turn}")
+        # print(f"right, angle is {car.angle_turn}")
     else: #straight
         car.led_off()
         car.greenled.on()
-        print(f"straight, angle is {car.angle_turn}")
+        # print(f"straight, angle is {car.angle_turn}")
 
     turn_angle_us = convert_angle(car.angle_turn)
     car.servo_ch.pulse_width(turn_angle_us)
