@@ -9,14 +9,14 @@ FOLLOW_LANE = 1
 
 
 # speed ranges from 1,650 to 1,562. range of 87.
-MAX_SPEED    = 1595 #5975 #1625 #15925
-SPEED_SCALAR = 800  #900  #750    # how much the car should slow down while turning
+MAX_SPEED    = 1580 #5975 #1625 #15925
+SPEED_SCALAR = 1050  #900  #750    # how much the car should slow down while turning
 MIN_SPEED    = 1562 # also offroad speed for now
 
 # change how strong the turning is
 TURN_STRENGTH = 11750 # default 10k feels pretty weak # 11850
 # change how large the turn angle is
-ANGLE_DIFF_OFFSET = .9
+ANGLE_DIFF_OFFSET = .8
 # these effectively do the same thing, but there is some nuance
 
 VELOCITY_CONSTANT_MULT = 31
@@ -37,7 +37,7 @@ OFFCENTER_ZONE = 30
 LEFT = True
 RIGHT = False
 
-GREY_THRESH = 185
+GREY_THRESH = 188
 # Camera Constants
 GRAYSCALE_THRESHOLD = [(GREY_THRESH, 255)] # 200, 255 initially
 ROIS = [  # [ROI, weight], ROI is (left, top, x from left, y from top)

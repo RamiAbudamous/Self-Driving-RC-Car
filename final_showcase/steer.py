@@ -18,7 +18,7 @@ def get_turn_angle(car):
     left_distance = 80 - car.x_vals[0]
     right_distance = car.x_vals[1] - 80
 
-    car.angle_turn = config.ANGLE_DIFF_OFFSET * (right_distance - left_distance) # set the turn angle
+    car.angle_turn = config.ANGLE_DIFF_OFFSET * (left_distance - right_distance) # set the turn angle
 
     print(f"angle = {car.angle_turn}, left = {left_distance}, right = {right_distance}")
 
