@@ -83,7 +83,7 @@ class openMV:
         self.blueled.on()
         # STARTUP: In neutral for at least 5 seconds
         self.servo_ch.pulse_width(steer.convert_angle(0))
-        self.motor_ch.pulse_width(motor.convert_speed(1500))
+        self.motor_ch.pulse_width(motor.convert_speed(0))
         # Set direction FORWARD for H-Bridge
         self.ina.high()
         self.inb.low()

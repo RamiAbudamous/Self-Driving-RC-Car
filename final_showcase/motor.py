@@ -1,10 +1,10 @@
 import config
 
 def brake(car):
-    car.motor_ch.pulse_width(convert_speed(1500))
+    car.motor_ch.pulse_width(convert_speed(0))
 
 def convert_speed(input_speed):
-    speed = max(1500, min(config.MAX_SPEED, input_speed)) # clip speed
+    speed = max(config.MIN_SPEED, min(config.MAX_SPEED, input_speed)) # clip speed
     return int(speed*(19200/10000)) #scale speed and return
 
 def go(car):
