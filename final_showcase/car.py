@@ -3,22 +3,22 @@ from pyb import Timer, Pin
 from machine import LED
 import config, steer, motor
 
-def timer_tick(timer):
-    if config.rotations>0:
-        config.velocity = config.VELOCITY_CONSTANT_MULT*config.rotations
-    else:
-        config.velocity = 1
+# def timer_tick(timer):
+#     if config.rotations>0:
+#         config.velocity = config.VELOCITY_CONSTANT_MULT*config.rotations
+#     else:
+#         config.velocity = 1
 
-    # print(f"The velocity was {config.velocity}cm/s, ({config.rotations} rotations)")
-    if config.velocity > config.max_velocity:
-        # print(f"velocity > max velocity ({velocity}>{self.max_velocity})")
-        config.max_velocity = config.velocity
+#     # print(f"The velocity was {config.velocity}cm/s, ({config.rotations} rotations)")
+#     if config.velocity > config.max_velocity:
+#         # print(f"velocity > max velocity ({velocity}>{self.max_velocity})")
+#         config.max_velocity = config.velocity
 
-    config.rotations=0
+#     config.rotations=0
 
-def isr(p):
-    # print("interrupted")
-    config.rotations+=1
+# def isr(p):
+#     # print("interrupted")
+#     config.rotations+=1
 
 
 
@@ -32,9 +32,8 @@ class openMV:
     # 1.9 = Right
 
     # MOTOR PWM - using Timer for P9
-    motor_timer = Timer(2, freq=1600)
-    # motor_ch = motor_timer.channel(3, Timer.PWM, pin=Pin("P6"), pulse_width=1500)
-    motor_ch = motor_timer.channel(3, Timer.PWM, pin=Pin("P6"), pulse_width_percent=15)
+    motor_timer = Timer(2, freq=100)
+    motor_ch = motor_timer.channel(3, Timer.PWM, pin=Pin("P6"), pulse_width=1500)
     # 1.3 = Full speed reverse
     # 1.5 = Brake
     # 1.65 = Full speed forward
@@ -84,9 +83,7 @@ class openMV:
         self.blueled.on()
         # STARTUP: In neutral for at least 5 seconds
         self.servo_ch.pulse_width(steer.convert_angle(0))
-        self.motor_ch.pulse_width_percent(0)
-        # self.motor_ch.pulse_width(motor.convert_speed(0))
-
+        self.motor_ch.pulse_width(motor.convert_speed(1500))
         # Set direction FORWARD for H-Bridge
         self.ina.high()
         self.inb.low()
