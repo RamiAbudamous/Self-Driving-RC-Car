@@ -20,7 +20,7 @@ def get_turn_angle(car):
 
     car.angle_turn = config.ANGLE_DIFF_OFFSET * (left_distance - right_distance) # set the turn angle
 
-    print(f"angle = {car.angle_turn}, left = {left_distance}, right = {right_distance}")
+    # print(f"angle = {car.angle_turn}, left = {left_distance}, right = {right_distance}")
 
 # take the blobs and find the angles
 # def find_blob_angle(car, i): # i will be 0 or 2, 0 for left, 2 for right
@@ -69,10 +69,10 @@ def offroad(car):
     if car.last_seen==config.RIGHT:
         turn_angle_us = convert_angle(config.OFFROAD_ANGLE)
         # print(f"offroad right, angle is {config.OFFROAD_ANGLE}, sigma is {turn_angle_us}")
-        print(f"offroad right, angle is {car.angle_turn}")
+        # print(f"offroad right, angle is {car.angle_turn}")
     else: # if LEFT
         turn_angle_us = convert_angle(-1*config.OFFROAD_ANGLE)
         # print(f"offroad left, angle is {config.OFFROAD_ANGLE}, sigma is {turn_angle_us}")
-        print(f"offroad left, angle is {car.angle_turn}")
+        # print(f"offroad left, angle is {car.angle_turn}")
 
     car.servo_ch.pulse_width(turn_angle_us)
