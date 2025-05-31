@@ -16,7 +16,7 @@ MIN_SPEED    = 1100 # also offroad speed for now
 # change how strong the turning is
 TURN_STRENGTH = 11750 # default 10k feels pretty weak # 11850
 # change how large the turn angle is
-ANGLE_DIFF_OFFSET = .8
+ANGLE_DIFF_OFFSET = .87
 # these effectively do the same thing, but there is some nuance
 
 VELOCITY_CONSTANT_MULT = 31
@@ -37,7 +37,7 @@ OFFCENTER_ZONE = 30
 LEFT = True
 RIGHT = False
 
-GREY_THRESH = 188
+GREY_THRESH = 190
 # Camera Constants
 GRAYSCALE_THRESHOLD = [(GREY_THRESH, 255)] # 200, 255 initially
 ROIS = [  # [ROI, weight], ROI is (left, top, x from left, y from top)

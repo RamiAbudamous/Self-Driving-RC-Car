@@ -3,22 +3,22 @@ from pyb import Timer, Pin
 from machine import LED
 import config, steer, motor
 
-def timer_tick(timer):
-    if config.rotations>0:
-        config.velocity = config.VELOCITY_CONSTANT_MULT*config.rotations
-    else:
-        config.velocity = 1
+# def timer_tick(timer):
+#     if config.rotations>0:
+#         config.velocity = config.VELOCITY_CONSTANT_MULT*config.rotations
+#     else:
+#         config.velocity = 1
 
-    print(f"The velocity was {config.velocity}cm/s, ({config.rotations} rotations)")
-    if config.velocity > config.max_velocity:
-        # print(f"velocity > max velocity ({velocity}>{self.max_velocity})")
-        config.max_velocity = config.velocity
+#     # print(f"The velocity was {config.velocity}cm/s, ({config.rotations} rotations)")
+#     if config.velocity > config.max_velocity:
+#         # print(f"velocity > max velocity ({velocity}>{self.max_velocity})")
+#         config.max_velocity = config.velocity
 
-    config.rotations=0
+#     config.rotations=0
 
-def isr(p):
-    #print("interrupted")
-    config.rotations+=1
+# def isr(p):
+#     # print("interrupted")
+#     config.rotations+=1
 
 
 
@@ -32,20 +32,20 @@ class openMV:
     # 1.9 = Right
 
     # MOTOR PWM - using Timer for P9
-    motor_timer = Timer(4, freq=100)
-    motor_ch = motor_timer.channel(3, Timer.PWM, pin=Pin("P9"), pulse_width=1500)
+    motor_timer = Timer(2, freq=100)
+    motor_ch = motor_timer.channel(3, Timer.PWM, pin=Pin("P6"), pulse_width=1500)
     # 1.3 = Full speed reverse
     # 1.5 = Brake
     # 1.65 = Full speed forward
 
     # H-Bridge Direction Control Pins
-    ina = Pin("P6", Pin.OUT)
+    ina = Pin("P9", Pin.OUT)
     inb = Pin("P5", Pin.OUT)
 
     # Speed detector
-    tim = Timer(2, freq=1, callback=timer_tick)
-    pin = Pin("P4", Pin.IN) # pin.pull_up is an internal resistor
-    pin.irq(trigger = Pin.IRQ_FALLING, handler=isr) # activate on falling edge
+    # tim = Timer(2, freq=1, callback=timer_tick)
+    # pin = Pin("P4", Pin.IN) # pin.pull_up is an internal resistor
+    # pin.irq(trigger = Pin.IRQ_FALLING, handler=isr) # activate on falling edge
 
     # LED Definitions
     redled = LED("LED_RED") # RIGHT

@@ -13,14 +13,14 @@ def tick(timer):
     rotations=0
 
 def isr(p):
-    #print("interrupted")
+    # print("interrupted")
     global rotations
     blueled.toggle()
     rotations+=1
     # time.sleep_ms(100)
 
 tim = Timer(-1, freq=1, callback=tick)
-pin = Pin("P6", Pin.IN) # pin.pull_up is an internal resistor
+pin = Pin("P4", Pin.IN) # pin.pull_up is an internal resistor
 
 pin.irq(trigger = Pin.IRQ_FALLING, handler=isr) # activate on falling edge
 while True:
