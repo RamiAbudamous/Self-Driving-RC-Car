@@ -9,9 +9,9 @@ FOLLOW_LANE = 1
 
 
 # speed ranges from 1,650 to 1,562. range of 87.
-MAX_SPEED    = 1550 #5975 #1625 #15925
-SPEED_SCALAR = 1050  #900 #750 # how much the car should slow down while turning
-MIN_SPEED    = 1530 #1562 # also offroad speed for now
+MAX_SPEED    = 1300 #5975 #1625 #15925
+SPEED_SCALAR = 1050  #900  #750    # how much the car should slow down while turning
+MIN_SPEED    = 1100 # also offroad speed for now
 
 # change how strong the turning is
 TURN_STRENGTH = 11750 # default 10k feels pretty weak # 11850

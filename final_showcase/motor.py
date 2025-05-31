@@ -1,7 +1,7 @@
 import config
 
 def brake(car):
-    car.motor_ch.pulse_width(convert_speed(1500))
+    car.motor_ch.pulse_width(convert_speed(0))
 
 def convert_speed(input_speed):
     speed = max(config.MIN_SPEED, min(config.MAX_SPEED, input_speed)) # clip speed
