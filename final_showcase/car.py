@@ -32,14 +32,14 @@ class openMV:
     # 1.9 = Right
 
     # MOTOR PWM - using Timer for P9
-    motor_timer = Timer(2, freq=100)
-    motor_ch = motor_timer.channel(3, Timer.PWM, pin=Pin("P6"), pulse_width=1500)
+    motor_timer = Timer(4, freq=100)
+    motor_ch = motor_timer.channel(3, Timer.PWM, pin=Pin("P9"), pulse_width=1500)
     # 1.3 = Full speed reverse
     # 1.5 = Brake
     # 1.65 = Full speed forward
 
     # H-Bridge Direction Control Pins
-    ina = Pin("P9", Pin.OUT)
+    ina = Pin("P6", Pin.OUT)
     inb = Pin("P5", Pin.OUT)
 
     # Speed detector
@@ -83,12 +83,13 @@ class openMV:
         self.blueled.on()
         # STARTUP: In neutral for at least 5 seconds
         self.servo_ch.pulse_width(steer.convert_angle(0))
-        self.motor_ch.pulse_width(motor.convert_speed(0))
+        self.motor_ch.pulse_width(motor.convert_speed(1500))
+        # wait 5 seconds then turn off LED to show that initialization is over
+        time.sleep_ms(10000)
         # Set direction FORWARD for H-Bridge
         self.ina.high()
         self.inb.low()
-        # wait 5 seconds then turn off LED to show that initialization is over
-        time.sleep_ms(5000)
+
         self.led_off()
 
     # main loop of car
