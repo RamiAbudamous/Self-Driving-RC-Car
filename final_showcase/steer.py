@@ -49,20 +49,20 @@ def turn(car):
     # execute changes before running a bunch of slow IO code
     car.servo_ch.pulse_width(convert_angle(car.angle_turn))
 
-    if car.angle_turn<(-1*config.ANGLE): # left
+    if car.angle_turn>(config.ANGLE): # left
         car.led_off()
         car.blueled.on()
         car.last_seen = config.LEFT
-        # print(f"left, angle is {car.angle_turn}")
-    elif car.angle_turn>config.ANGLE: # right
+        print(f"left, angle is {car.angle_turn}")
+    elif car.angle_turn<config.ANGLE: # right
         car.led_off()
         car.redled.on()
         car.last_seen = config.RIGHT
-        # print(f"right, angle is {car.angle_turn}")
+        print(f"right, angle is {car.angle_turn}")
     else: #straight
         car.led_off()
         car.greenled.on()
-        # print(f"straight, angle is {car.angle_turn}")
+        print(f"straight, angle is {car.angle_turn}")
 
 
 def offroad(car):
