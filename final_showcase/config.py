@@ -8,15 +8,16 @@ COUNT_BRAKES = 0
 FOLLOW_LANE = 1
 
 
+SPEED_CONVERT_SCALAR = 170
 # speed ranges from 1,650 to 1,562. range of 87.
-MAX_SPEED    = 1520 #5975 #1625 #15925
+MAX_SPEED    = 1590 #5975 #1625 #15925
 SPEED_SCALAR = 1050  #900  #750    # how much the car should slow down while turning
-MIN_SPEED    = 1510 # also offroad speed for now
+MIN_SPEED    = 1560 # also offroad speed for now
 
 # change how strong the turning is
 TURN_STRENGTH = 11750 # default 10k feels pretty weak # 11850
 # change how large the turn angle is
-ANGLE_DIFF_OFFSET = .87
+ANGLE_DIFF_OFFSET = .85
 # these effectively do the same thing, but there is some nuance
 
 VELOCITY_CONSTANT_MULT = 31

@@ -9,7 +9,7 @@ import config, steer, motor
 #     else:
 #         config.velocity = 1
 
-#     # print(f"The velocity was {config.velocity}cm/s, ({config.rotations} rotations)")
+#     print(f"The velocity was {config.velocity}cm/s, ({config.rotations} rotations)")
 #     if config.velocity > config.max_velocity:
 #         # print(f"velocity > max velocity ({velocity}>{self.max_velocity})")
 #         config.max_velocity = config.velocity
@@ -17,10 +17,8 @@ import config, steer, motor
 #     config.rotations=0
 
 # def isr(p):
-#     # print("interrupted")
+#     #print("interrupted")
 #     config.rotations+=1
-
-
 
 class openMV:
     '''VARIABLES'''
@@ -42,7 +40,7 @@ class openMV:
     ina = Pin("P6", Pin.OUT)
     inb = Pin("P5", Pin.OUT)
 
-    # Speed detector
+    # # Speed detector
     # tim = Timer(2, freq=1, callback=timer_tick)
     # pin = Pin("P4", Pin.IN) # pin.pull_up is an internal resistor
     # pin.irq(trigger = Pin.IRQ_FALLING, handler=isr) # activate on falling edge
@@ -83,13 +81,12 @@ class openMV:
         self.blueled.on()
         # STARTUP: In neutral for at least 5 seconds
         self.servo_ch.pulse_width(steer.convert_angle(0))
-        self.motor_ch.pulse_width(motor.convert_speed(1500))
+        self.motor_ch.pulse_width(motor.convert_speed(0))
         # wait 5 seconds then turn off LED to show that initialization is over
         time.sleep_ms(10000)
         # Set direction FORWARD for H-Bridge
-        self.ina.high()
-        self.inb.low()
-
+        self.ina.low()
+        self.inb.high()
         self.led_off()
 
     # main loop of car
