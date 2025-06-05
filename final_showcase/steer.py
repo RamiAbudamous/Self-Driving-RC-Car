@@ -54,7 +54,7 @@ def turn(car):
         car.blueled.on()
         car.last_seen = config.LEFT
         print(f"left, angle is {car.angle_turn}")
-    elif car.angle_turn<config.ANGLE: # right
+    elif car.angle_turn<(-1*config.ANGLE): # right
         car.led_off()
         car.redled.on()
         car.last_seen = config.RIGHT
@@ -67,11 +67,11 @@ def turn(car):
 
 def offroad(car):
     if car.last_seen==config.RIGHT:
-        turn_angle_us = convert_angle(config.OFFROAD_ANGLE)
+        turn_angle_us = convert_angle(-1*config.OFFROAD_ANGLE)
         # print(f"offroad right, angle is {config.OFFROAD_ANGLE}, sigma is {turn_angle_us}")
         # print(f"offroad right, angle is {car.angle_turn}")
     else: # if LEFT
-        turn_angle_us = convert_angle(-1*config.OFFROAD_ANGLE)
+        turn_angle_us = convert_angle(config.OFFROAD_ANGLE)
         # print(f"offroad left, angle is {config.OFFROAD_ANGLE}, sigma is {turn_angle_us}")
         # print(f"offroad left, angle is {car.angle_turn}")
 
