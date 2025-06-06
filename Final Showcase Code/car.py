@@ -3,23 +3,6 @@ from pyb import Timer, Pin
 from machine import LED
 import config, steer, motor
 
-# def timer_tick(timer):
-#     if config.rotations>0:
-#         config.velocity = config.VELOCITY_CONSTANT_MULT*config.rotations
-#     else:
-#         config.velocity = 1
-
-#     print(f"The velocity was {config.velocity}cm/s, ({config.rotations} rotations)")
-#     if config.velocity > config.max_velocity:
-#         # print(f"velocity > max velocity ({velocity}>{self.max_velocity})")
-#         config.max_velocity = config.velocity
-
-#     config.rotations=0
-
-# def isr(p):
-#     #print("interrupted")
-#     config.rotations+=1
-
 class openMV:
     '''VARIABLES'''
     # SERVO - using Timer for P7
@@ -39,11 +22,6 @@ class openMV:
     # H-Bridge Direction Control Pins
     ina = Pin("P6", Pin.OUT)
     inb = Pin("P5", Pin.OUT)
-
-    # # Speed detector
-    # tim = Timer(2, freq=1, callback=timer_tick)
-    # pin = Pin("P4", Pin.IN) # pin.pull_up is an internal resistor
-    # pin.irq(trigger = Pin.IRQ_FALLING, handler=isr) # activate on falling edge
 
     # LED Definitions
     redled = LED("LED_RED") # RIGHT
@@ -142,8 +120,3 @@ class openMV:
                 self.flags.append(True)
             else:
                 self.flags.append(False)
-
-        # if self.flags[0] and self.flags[1]:
-        #     self.img.draw_line((self.x_vals[0], self.y_vals[0], self.x_vals[1], self.y_vals[1]), color=0)
-        # if self.flags[2] and self.flags[3]:
-        #     self.img.draw_line((self.x_vals[2], self.y_vals[2], self.x_vals[3], self.y_vals[3]), color=0)
